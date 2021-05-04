@@ -9,7 +9,7 @@ name = "lib"
 path = "src/lib.rs"
 
 [[bin]]
-name = "bin"
+name = "ahps"
 path = "src/bin.rs"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
