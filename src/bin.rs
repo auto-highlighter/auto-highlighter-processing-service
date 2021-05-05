@@ -1,5 +1,5 @@
-use lib::say_hello;
+use lib::clip_video;
 
 fn main() {
-    say_hello();
+    clip_video();
 }

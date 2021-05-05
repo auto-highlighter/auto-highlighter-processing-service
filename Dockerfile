@@ -1,19 +1,18 @@
-FROM rust:1.51.0 as builder
-RUN USER=root cargo new --bin ahps
+FROM restreamio/gstreamer:latest-dev as builder
+RUN apt-get update && apt-get install -y curl
+RUN apt-get install build-essential -y
+ 
+RUN mkdir -p /user/rust-builder/src
+WORKDIR /user/rust-builder/src
+ 
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+ENV PATH="/root/.cargo/bin:${PATH}"
 WORKDIR /ahps
-RUN touch ./src/lib.rs 
-RUN mv ./src/main.rs ./src/bin.rs 
-COPY ./Cargo.toml ./Cargo.toml
-RUN cargo build --release
-RUN rm -r src/*
-
-ADD . ./
-
-RUN rm ./target/release/deps/ahps*
+COPY . .
 RUN cargo build --release
 
-FROM restreamio/gstreamer:latest-prod
-ARG APP=/usr/src/ahps
-COPY --from=builder /ahps/target/release/ahps ${APP}/ahps
-WORKDIR ${APP}
-CMD ["./ahps"]
+FROM alpine:latest
+RUN apk update && apk add bash
+COPY --from=builder /ahps/target/release/ahps /ahps/ahps
+
+WORKDIR /ahps

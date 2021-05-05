@@ -1,3 +1,3 @@
-pub fn say_hello(){
-    println!("Hello, world!");
+pub fn clip_video(){
+    println!("Hello,22 world!");
 }
