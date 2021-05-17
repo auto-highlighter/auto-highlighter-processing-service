@@ -1,10 +1,10 @@
 FROM rust:1.51.0 as builder
 
-RUN apt-get update && apt-get install libgstreamer1.0-0 gstreamer1.0-plugins-base \
+RUN apt-get update && apt-get install build-essential libgstreamer1.0-0 gstreamer1.0-plugins-base \
     gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly \
     gstreamer1.0-libav gstreamer1.0-doc gstreamer1.0-tools gstreamer1.0-x \
-    gstreamer1.0-alsa gstreamer1.0-gl gstreamer1.0-gtk3 gstreamer1.0-qt5 \
-    gstreamer1.0-pulseaudio -y
+    gstreamer1.0-alsa gstreamer1.0-gl libgstrtspserver-1.0-dev libges-1.0-dev\
+     gstreamer1.0-gtk3 gstreamer1.0-qt5 gstreamer1.0-pulseaudio -y
     
 RUN USER=root cargo new --bin ahps
 
@@ -24,11 +24,11 @@ RUN cargo build --release
 
 
 FROM debian:buster-slim
-RUN apt-get update && apt-get install libgstreamer1.0-0 gstreamer1.0-plugins-base \
+RUN apt-get update && apt-get install build-essential libgstreamer1.0-0 gstreamer1.0-plugins-base \
     gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly \
     gstreamer1.0-libav gstreamer1.0-doc gstreamer1.0-tools gstreamer1.0-x \
-    gstreamer1.0-alsa gstreamer1.0-gl gstreamer1.0-gtk3 gstreamer1.0-qt5 \
-    gstreamer1.0-pulseaudio -y
+    gstreamer1.0-alsa gstreamer1.0-gl libgstrtspserver-1.0-dev libges-1.0-dev\
+     gstreamer1.0-gtk3 gstreamer1.0-qt5 gstreamer1.0-pulseaudio -y
 
 ARG APP=/usr/src/app
 
