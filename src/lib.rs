@@ -1,7 +1,13 @@
 use gstreamer as gst;
 use gstreamer::{ElementExt, ElementExtManual, GstObjectExt};
 use gstreamer_editing_services as ges;
-use gstreamer_editing_services::{GESPipelineExt, LayerExt, TimelineElementExt, TimelineExt};
+use gstreamer_editing_services::{
+    GESPipelineExt, LayerExt, TimelineElementExt, TimelineExt, UriClipAssetExt,
+};
+use gstreamer_pbutils as gst_pbutils;
+use gstreamer_pbutils::{
+    EncodingAudioProfileBuilder, EncodingProfileBuilder, EncodingVideoProfileBuilder, EncodingProfileExt
+};
 
 pub fn clip_video() {
     println!("Hello, world!");
@@ -19,48 +25,96 @@ pub fn clip_video() {
         _ => (),
     }
 
-    let clip = ges::UriClip::new("file:///mnt/f/Personal-Docs/Repos/auto-highlighter-processing-service/input/test-video.mp4").expect("Failed to create clip");
-    match layer.add_clip(&clip) {
-        Err(e) => println!("{:?}", e),
-        _ => (),
+    let video_profile = gst_pbutils::EncodingVideoProfileBuilder::new()
+        .name("h.264")
+        .description("h.264-profile")
+        .format(&gst::caps::Caps::new_simple("video/x-h264", &[]))
+        .build()
+        .unwrap();
+
+    let audio_profile = gst_pbutils::EncodingAudioProfileBuilder::new()
+        .name("mp3")
+        .description("mp3-profile")
+        .format(&gst::caps::Caps::new_simple(
+            "audio/mpeg",
+            &[("mpegversion", &"1"), ("layer", &"3")],
+        ))
+        .build()
+        .unwrap();
+
+    let contianer_profile = gst_pbutils::EncodingContainerProfileBuilder::new()
+        .name("default-mp4-profile")
+        .description("mp4-with-h.264-mp3")
+        .format(&gst::caps::Caps::new_simple(
+            "video/quicktime",
+            &[("variant", &"iso")],
+        ))
+        .enabled(true)
+        .add_profile(&video_profile)
+        .add_profile(&audio_profile)
+        .build()
+        .unwrap();
+
+    println!("{}", contianer_profile.get_description().unwrap());
+
+    let asset = ges::UriClipAsset::request_sync("file:///mnt/f/Personal-Docs/Repos/auto-highlighter-processing-service/input/test-video.mp4").expect("Failed to create asset");
+
+    match asset.get_info() {
+        Some(v) => println!("{}", v.get_duration()),
+        None => {}
     }
 
-    let duration = clip.get_duration();
-    println!(
-        "Clip duration: {} - playing file from {} for {}",
-        duration,
-        duration / 2,
-        duration / 4
-    );
+    let clip = layer
+        .add_asset(
+            &asset,
+            0 * gst::SECOND,
+            10 * gst::SECOND,
+            10 * gst::SECOND,
+            ges::TrackType::CUSTOM,
+        )
+        .expect("Failed to add asset to layer");
 
-    clip.set_inpoint(duration / 2);
-    clip.set_duration(duration / 4);
+    // match layer.add_clip(&clip) {
+    //     Err(e) => println!("{:?}", e),
+    //     _ => (),
+    // }
 
-    pipeline
-        .set_state(gst::State::Playing)
-        .expect("Unable to set the pipeline to the `Playing` state");
+    // let duration = clip.get_duration();
+    // println!(
+    //     "Clip duration: {} - playing file from {} for {}",
+    //     duration,
+    //     duration / 2,
+    //     duration / 4
+    // );
 
-    let bus = pipeline.get_bus().unwrap();
+    // clip.set_inpoint(duration / 2);
+    // clip.set_duration(duration / 4);
 
-    for msg in bus.iter_timed(gst::CLOCK_TIME_NONE) {
-        use gst::MessageView;
+    // pipeline
+    //     .set_state(gst::State::Playing)
+    //     .expect("Unable to set the pipeline to the `Playing` state");
 
-        match msg.view() {
-            MessageView::Eos(..) => break,
-            MessageView::Error(err) => {
-                println!(
-                    "Error from {:?}: {} ({:?})",
-                    err.get_src().map(|s| s.get_path_string()),
-                    err.get_error(),
-                    err.get_debug()
-                );
-                break;
-            }
-            _ => (),
-        }
-    }
+    // let bus = pipeline.get_bus().unwrap();
 
-    pipeline
-        .set_state(gst::State::Null)
-        .expect("Unable to set the pipeline to the `Null` state");
+    // for msg in bus.iter_timed(gst::CLOCK_TIME_NONE) {
+    //     use gst::MessageView;
+
+    //     match msg.view() {
+    //         MessageView::Eos(..) => break,
+    //         MessageView::Error(err) => {
+    //             println!(
+    //                 "Error from {:?}: {} ({:?})",
+    //                 err.get_src().map(|s| s.get_path_string()),
+    //                 err.get_error(),
+    //                 err.get_debug()
+    //             );
+    //             break;
+    //         }
+    //         _ => (),
+    //     }
+    // }
+
+    // pipeline
+    //     .set_state(gst::State::Null)
+    //     .expect("Unable to set the pipeline to the `Null` state");
 }

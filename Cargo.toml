@@ -17,3 +17,4 @@ path = "src/bin.rs"
 [dependencies]
 gstreamer = "0.16.7"
 gstreamer-editing-services = "0.16.5"
+gstreamer-pbutils = "0.16.5"
