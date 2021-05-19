@@ -3,7 +3,7 @@ use gstreamer::{ElementExt, ElementExtManual, GstObjectExt};
 use gstreamer_editing_services as ges;
 use gstreamer_editing_services::{GESPipelineExt, LayerExt, TimelineExt};
 use gstreamer_pbutils as gst_pbutils;
-use gstreamer_pbutils::{EncodingProfileBuilder};
+use gstreamer_pbutils::EncodingProfileBuilder;
 
 pub fn clip_video() {
     match gst::init() {
@@ -36,7 +36,7 @@ pub fn clip_video() {
         .description("mp3-profile")
         .format(&gst::caps::Caps::new_simple(
             "audio/mpeg",
-            &[("mpegversion", &"1"), ("layer", &"3")],
+            &[("mpegversion", &1i32), ("layer", &3i32)],
         ))
         .build()
         .unwrap();
@@ -54,7 +54,7 @@ pub fn clip_video() {
         .build()
         .unwrap();
 
-    let asset = ges::UriClipAsset::request_sync("file:///mnt/f/Personal-Docs/Repos/auto-highlighter-processing-service/input/test-video.mp4").expect("Failed to create asset");
+    let asset = ges::UriClipAsset::request_sync("file:///home/ryan/repos/auto-highlighter-processing-service/input/test-video.mp4").expect("Failed to create asset");
 
     match layer.add_asset(
         &asset,
@@ -67,7 +67,7 @@ pub fn clip_video() {
         _ => (),
     }
 
-    match pipeline.set_render_settings("file:///mnt/f/Personal-Docs/Repos/auto-highlighter-processing-service/output/test-video.mp4", &contianer_profile){
+    match pipeline.set_render_settings("file:///home/ryan/repos/auto-highlighter-processing-service/output/test-video.mp4", &contianer_profile){
         Err(e) => eprintln!("{:?}", e),
         _ => (),
     }
@@ -76,6 +76,14 @@ pub fn clip_video() {
         Err(e) => eprintln!("{:?}", e),
         _ => (),
     }
+
+    pipeline
+        .set_state(gst::State::Ready)
+        .expect("Unable to set the pipeline to the `Ready` state");
+
+    pipeline
+        .set_state(gst::State::Paused)
+        .expect("Unable to set the pipeline to the `Ready` state");
 
     match pipeline.set_state(gst::State::Playing) {
         Err(e) => eprintln!("{:?}", e),
@@ -102,6 +110,18 @@ pub fn clip_video() {
         }
     }
 
+    pipeline
+        .set_state(gst::State::Paused)
+        .expect("Unable to set the pipeline to the `Ready` state");
+
+    pipeline
+        .set_state(gst::State::Ready)
+        .expect("Unable to set the pipeline to the `Ready` state");
+
+    pipeline
+        .set_state(gst::State::Null)
+        .expect("Unable to set the pipeline to the `Null` state");
+
     // match layer.add_clip(&clip) {
     //     Err(e) => println!("{:?}", e),
     //     _ => (),
@@ -123,8 +143,4 @@ pub fn clip_video() {
     //     .expect("Unable to set the pipeline to the `Playing` state");
 
     // let bus = pipeline.get_bus().unwrap();
-
-    // pipeline
-    //     .set_state(gst::State::Null)
-    //     .expect("Unable to set the pipeline to the `Null` state");
 }
