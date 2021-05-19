@@ -1,18 +1,17 @@
 use gstreamer as gst;
 use gstreamer::{ElementExt, ElementExtManual, GstObjectExt};
 use gstreamer_editing_services as ges;
-use gstreamer_editing_services::{
-    GESPipelineExt, LayerExt, TimelineElementExt, TimelineExt, UriClipAssetExt,
-};
+use gstreamer_editing_services::{GESPipelineExt, LayerExt, TimelineExt};
 use gstreamer_pbutils as gst_pbutils;
-use gstreamer_pbutils::{
-    EncodingAudioProfileBuilder, EncodingProfileBuilder, EncodingVideoProfileBuilder, EncodingProfileExt
-};
+use gstreamer_pbutils::{EncodingProfileBuilder};
 
 pub fn clip_video() {
-    println!("Hello, world!");
+    match gst::init() {
+        Err(e) => eprintln!("{:?}", e),
+        _ => (),
+    }
     match ges::init() {
-        Err(e) => println!("{:?}", e),
+        Err(e) => eprintln!("{:?}", e),
         _ => (),
     }
 
@@ -21,7 +20,7 @@ pub fn clip_video() {
 
     let pipeline = ges::Pipeline::new();
     match pipeline.set_timeline(&timeline) {
-        Err(e) => println!("{:?}", e),
+        Err(e) => eprintln!("{:?}", e),
         _ => (),
     }
 
@@ -55,24 +54,53 @@ pub fn clip_video() {
         .build()
         .unwrap();
 
-    println!("{}", contianer_profile.get_description().unwrap());
-
     let asset = ges::UriClipAsset::request_sync("file:///mnt/f/Personal-Docs/Repos/auto-highlighter-processing-service/input/test-video.mp4").expect("Failed to create asset");
 
-    match asset.get_info() {
-        Some(v) => println!("{}", v.get_duration()),
-        None => {}
+    match layer.add_asset(
+        &asset,
+        0 * gst::SECOND,
+        10 * gst::SECOND,
+        10 * gst::SECOND,
+        ges::TrackType::CUSTOM,
+    ) {
+        Err(e) => eprintln!("{:?}", e),
+        _ => (),
     }
 
-    let clip = layer
-        .add_asset(
-            &asset,
-            0 * gst::SECOND,
-            10 * gst::SECOND,
-            10 * gst::SECOND,
-            ges::TrackType::CUSTOM,
-        )
-        .expect("Failed to add asset to layer");
+    match pipeline.set_render_settings("file:///mnt/f/Personal-Docs/Repos/auto-highlighter-processing-service/output/test-video.mp4", &contianer_profile){
+        Err(e) => eprintln!("{:?}", e),
+        _ => (),
+    }
+
+    match pipeline.set_mode(ges::PipelineFlags::RENDER) {
+        Err(e) => eprintln!("{:?}", e),
+        _ => (),
+    }
+
+    match pipeline.set_state(gst::State::Playing) {
+        Err(e) => eprintln!("{:?}", e),
+        _ => (),
+    }
+
+    let bus = pipeline.get_bus().unwrap();
+
+    for msg in bus.iter_timed(gst::CLOCK_TIME_NONE) {
+        use gst::MessageView;
+
+        match msg.view() {
+            MessageView::Eos(..) => break,
+            MessageView::Error(err) => {
+                println!(
+                    "Error from {:?}: {} ({:?})",
+                    err.get_src().map(|s| s.get_path_string()),
+                    err.get_error(),
+                    err.get_debug()
+                );
+                break;
+            }
+            _ => (),
+        }
+    }
 
     // match layer.add_clip(&clip) {
     //     Err(e) => println!("{:?}", e),
@@ -95,24 +123,6 @@ pub fn clip_video() {
     //     .expect("Unable to set the pipeline to the `Playing` state");
 
     // let bus = pipeline.get_bus().unwrap();
-
-    // for msg in bus.iter_timed(gst::CLOCK_TIME_NONE) {
-    //     use gst::MessageView;
-
-    //     match msg.view() {
-    //         MessageView::Eos(..) => break,
-    //         MessageView::Error(err) => {
-    //             println!(
-    //                 "Error from {:?}: {} ({:?})",
-    //                 err.get_src().map(|s| s.get_path_string()),
-    //                 err.get_error(),
-    //                 err.get_debug()
-    //             );
-    //             break;
-    //         }
-    //         _ => (),
-    //     }
-    // }
 
     // pipeline
     //     .set_state(gst::State::Null)
