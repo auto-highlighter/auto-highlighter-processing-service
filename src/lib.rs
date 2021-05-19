@@ -6,10 +6,6 @@ use gstreamer_pbutils as gst_pbutils;
 use gstreamer_pbutils::EncodingProfileBuilder;
 
 pub fn clip_video() {
-    match gst::init() {
-        Err(e) => eprintln!("{:?}", e),
-        _ => (),
-    }
     match ges::init() {
         Err(e) => eprintln!("{:?}", e),
         _ => (),
@@ -59,9 +55,9 @@ pub fn clip_video() {
     match layer.add_asset(
         &asset,
         0 * gst::SECOND,
-        10 * gst::SECOND,
-        10 * gst::SECOND,
-        ges::TrackType::CUSTOM,
+        0 * gst::SECOND,
+        120 * gst::SECOND,
+        ges::TrackType::UNKNOWN,
     ) {
         Err(e) => eprintln!("{:?}", e),
         _ => (),
