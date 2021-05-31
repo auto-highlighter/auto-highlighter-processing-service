@@ -32,7 +32,7 @@ pub fn clip_video() {
     }
 
     match pipeline.set_render_settings(
-        "file:///home/ryan/repos/auto-highlighter-processing-service/output/test-video-sot.webm",
+        "file:///home/ryan/repos/auto-highlighter-processing-service/output/test-video-sot.mp4",
         &contianer_profile,
     ) {
         Err(e) => eprintln!("{:?}", e),
@@ -109,24 +109,32 @@ fn render_video(pipeline: ges::Pipeline) {
 }
 
 fn get_container_profile() -> gst_pbutils::EncodingContainerProfile {
+
     let video_profile = gst_pbutils::EncodingVideoProfileBuilder::new()
-        .name("vp8")
-        .description("vp8-profile")
-        .format(&gst::caps::Caps::new_simple("video/x-vp8", &[]))
+        .name("h.264")
+        .description("h.264-profile")
+        .format(&gst::Caps::new_simple("video/x-h264", &[("framerate", &gst::Fraction::new(30, 1))]))
+        .preset(&"Profile YouTube")
         .build()
         .unwrap();
 
     let audio_profile = gst_pbutils::EncodingAudioProfileBuilder::new()
-        .name("vorbis")
-        .description("vorbis-profile")
-        .format(&gst::caps::Caps::new_simple("audio/x-vorbis", &[]))
+        .name("mp3")
+        .description("mp3-profile")
+        .format(&gst::caps::Caps::new_simple(
+            "audio/mpeg",
+            &[("mpegversion", &1i32), ("layer", &3i32)],
+        ))
         .build()
         .unwrap();
 
     let contianer_profile = gst_pbutils::EncodingContainerProfileBuilder::new()
-        .name("default-webm-profile")
-        .description("webm-with-vp8-vorbis")
-        .format(&gst::caps::Caps::new_simple("video/webm", &[]))
+        .name("default-mp4-profile")
+        .description("mp4-with-h.264-mp3")
+        .format(&gst::caps::Caps::new_simple(
+            "video/quicktime",
+            &[("variant", &"iso")],
+        ))
         .enabled(true)
         .add_profile(&video_profile)
         .add_profile(&audio_profile)
