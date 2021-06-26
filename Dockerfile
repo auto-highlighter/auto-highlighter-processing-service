@@ -1,4 +1,4 @@
-FROM rust:1.51.0 as builder
+FROM rust:1.52.1 as builder
 
 RUN apt-get update && apt-get install build-essential libgstreamer1.0-0 gstreamer1.0-plugins-base \
     gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly \
