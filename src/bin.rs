@@ -1,5 +1,8 @@
-use lib::clip_video;
+mod rmq;
+mod gst;
 
-fn main() {
-    clip_video();
+use lib::tokio_main;
+
+fn main(){
+   tokio_main();
 }
