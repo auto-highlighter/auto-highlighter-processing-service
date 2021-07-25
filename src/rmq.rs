@@ -1,15 +1,17 @@
+
 use deadpool_lapin::{Manager, PoolError};
 use dotenv;
 use envy;
 use futures::{join, StreamExt};
 use lapin::{options::*, types::FieldTable, BasicProperties, ConnectionProperties};
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize};
 use serde_json::from_slice;
 use std::result::Result as StdResult;
 use std::time::Duration;
 use thiserror::Error as ThisError;
 use tokio_amqp::*;
-use uuid::Uuid;
+use super::gst_highlighter::{HighlightConfig, make_highlights};
+use std::thread::spawn;
 
 type RMQResult<T> = StdResult<T, PoolError>;
 type Result<T> = StdResult<T, Error>;
@@ -31,11 +33,6 @@ pub enum Error {
 struct RMQConfig {
     amqp_url: String,
     pool_size: usize,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-struct RMQPayload {
-    hid: Uuid,
 }
 
 pub async fn rmq_runner() {
@@ -133,8 +130,11 @@ async fn init_rmq_listen(pool: Pool) -> Result<()> {
     println!("rmq consumer connected, waiting for messages");
     while let Some(delivery) = consumer.next().await {
         if let Ok((channel, delivery)) = delivery {
-            let payload = from_slice::<RMQPayload>(&delivery.data)?;
+            let payload = from_slice::<HighlightConfig>(&delivery.data)?;
             println!("received msg: {:?}", payload);
+            spawn(|| {
+                make_highlights(payload);
+            });
             channel
                 .basic_ack(delivery.delivery_tag, BasicAckOptions::default())
                 .await?

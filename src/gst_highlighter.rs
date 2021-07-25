@@ -4,12 +4,25 @@ use gstreamer_editing_services as ges;
 use gstreamer_editing_services::{GESPipelineExt, LayerExt, TimelineExt};
 use gstreamer_pbutils as gst_pbutils;
 use gstreamer_pbutils::EncodingProfileBuilder;
+use serde::{Deserialize, Serialize};
+use uuid::Uuid;
 
-pub fn make_highlights() {
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct HighlightConfig {
+    hid: Uuid,
+    time_stamps: Vec<i32>,
+    clip_duraiton: i32,
+}
+
+pub fn ges_init(){
     match ges::init() {
         Err(e) => eprintln!("{:?}", e),
         _ => (),
     }
+}
+
+pub fn make_highlights(config: HighlightConfig) {
 
     let (_timeline, pipeline, layer) = init_processing_structs();
 

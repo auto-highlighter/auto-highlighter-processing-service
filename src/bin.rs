@@ -1,5 +1,5 @@
 mod rmq;
-mod gst;
+mod gst_highlighter;
 
 use lib::tokio_main;
 
